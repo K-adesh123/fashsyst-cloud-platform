@@ -1,0 +1,22 @@
+# Terraform working files, state, and saved plans
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
+# Local secrets and private keys
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Python temporary files and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
