@@ -34,13 +34,45 @@ considering account availability and cost.
 
 ## Current status
 
-Repository setup is in progress.
-Application development and cloud deployment have not started.
+- FastAPI application implements GET /health.
+- Automated health endpoint test passes.
+- Docker image builds successfully.
+- Container runs locally as a non-root user.
+- Container endpoint returns HTTP 200 and {"status":"ok"}.
+- Troubleshooting notes document test discovery and Docker connectivity fixes.
 
-## Working approach
+Cloud deployment and CI automation are planned.
+## Run with Docker
 
-Build, test, document, and remove cloud resources after each
-deployment session when they are no longer needed.
+From the repository root, build the image:
 
-Use synthetic enquiry data during development.
-Keep credentials, private keys, and Terraform state out of Git.
+```bash
+docker build -t fashsyst-api:0.1 .
+```
+
+Start the container:
+
+```bash
+docker run -d --name fashsyst-api -p 127.0.0.1:8000:8000 fashsyst-api:0.1
+```
+
+Check the endpoint:
+
+```bash
+curl -i http://127.0.0.1:8000/health
+```
+
+Expected result: HTTP 200 with {"status":"ok"}.
+
+View application logs:
+
+```bash
+docker logs --tail 20 fashsyst-api
+```
+
+Stop and remove the container when finished:
+
+```bash
+docker stop fashsyst-api
+docker rm fashsyst-api
+```
