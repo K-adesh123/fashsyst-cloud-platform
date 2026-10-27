@@ -2,7 +2,7 @@ name: API CI
 
 on:
   push:
-    branches: [main, feature/health-endpoint]
+    branches: [main, "feature/**"]
   pull_request:
     branches: [main]
 
@@ -32,3 +32,36 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t fashsyst-api:ci .
+
+      - name: Start container
+        run: docker run -d --name api-ci -p 127.0.0.1:8000:8000 fashsyst-api:ci
+
+      - name: Verify container health endpoint
+        run: |
+          python - <<'PY'
+          import json
+          import time
+          import urllib.request
+
+          for attempt in range(15):
+              try:
+                  with urllib.request.urlopen(
+                      "http://127.0.0.1:8000/health", timeout=2
+                  ) as response:
+                      assert response.status == 200
+                      assert json.load(response) == {"status": "ok"}
+                  print("Container health check passed")
+                  break
+              except Exception:
+                  if attempt == 14:
+                      raise
+                  time.sleep(2)
+          PY
+
+      - name: Show container logs
+        if: always()
+        run: docker logs api-ci || true
+
+      - name: Remove test container
+        if: always()
+        run: docker rm -f api-ci || true
