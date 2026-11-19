@@ -21,7 +21,10 @@ The current application implements a health endpoint. Enquiry processing and dat
 - Inbound API access is restricted to a specified public IPv4 address.
 - Development Terraform state uses S3 with versioning, encryption, and native state locking.
 - AWS deployment was verified: task `RUNNING`, health `HEALTHY`, and `/health` returned `{"status":"ok"}`.
-- The development service is currently paused with `desired_count = 0`.
+- On 19 November 2026, the AWS lab was torn down: 18 development resources and 4 bootstrap resources destroyed. The deployment is no longer live.
+- The state bucket's absence was checked, and Ohio inventory checks returned no EC2 instances in pending/running/stopping/stopped states, EBS volumes, or Elastic IPs.
+
+See [deployment and teardown evidence](docs/evidence/README.md) and the [architecture diagram](docs/architecture.md).
 
 AWS image publishing and Terraform deployment are currently performed manually. CI does not deploy to AWS.
 
@@ -100,8 +103,16 @@ terraform -chdir=infrastructure/environments/dev plan
 
 Review the plan before applying changes.
 
-## Restart the development API
+## Rebuild after teardown
 
-1. Confirm the security group ingress address matches your current public IPv4 address with `/32`.
-2. In `infrastructure/environments/dev/ecs.tf`, set the ECS service to `desired_count = 1`.
-3. Run Terraform plan and review the proposed changes.
+The former S3 backend bucket and ECR images have been deleted. The old restart procedure (changing desired_count alone) is insufficient.
+
+To rebuild, first provision the bootstrap state bucket using its separate local state, then initialize the development S3 backend. Review the development plan, recreate ECR and supporting resources, build and publish the image referenced by the task definition, and enable the ECS service only when the image is available. Recheck the allowed public IPv4 address before testing. Review each plan; do not apply infrastructure simply to inspect this project.
+
+State backups are private and excluded from Git. The bootstrap configuration retains force_destroy = false and prevent_destroy = true as its normal safeguards.
+
+## Scope and limitations
+
+This milestone demonstrates a tested container and a manually deployed AWS development environment. It is not a completed business enquiry system. AWS OIDC publishing/deployment is deferred because this account restricts IAM identity provider functionality. HTTPS, enquiry endpoints, PostgreSQL, monitoring alarms, and recovery testing remain future work.
+
+Deleting this lab does not establish that the whole AWS account has no costs. Inventory checks shown in the evidence are limited to the services and region queried; billing review and other-region checks are separate.
